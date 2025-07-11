@@ -6,7 +6,7 @@ phases:
       python: 3.8  # Temporary, Python 3.13.5 will be installed manually
     commands:
       - echo Installing base tools...
-      - yum install -y git curl wget unzip
+      - yum install -y git curl wget unzip --skip-broken
 
       - echo Installing AWS CLI v2...
       - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
