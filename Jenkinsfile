@@ -14,7 +14,7 @@ pipeline {
     stage('Install Base Tools') {
       steps {
         sh '''
-        set -e   # Exit immediately on errors
+        #set -e   # Exit immediately on errors
 
         echo "==> Updating apt package index..."
         #sudo apt-get update -y
