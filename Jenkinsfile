@@ -17,7 +17,7 @@ pipeline {
         set -e   # Exit immediately on errors
 
         echo "==> Updating apt package index..."
-        sudo apt-get update -y
+        #sudo apt-get update -y
 
         echo "==> Installing base packages (git, curl, wget, unzip)..."
         // sudo apt-get install -y git curl wget unzip
