@@ -1,35 +1,86 @@
 pipeline {
-  agent any
+  /* ------------------------------------------------------------
+     Runs on any Ubuntu agent that has sudo privileges available
+     ---------------------------------------------------------- */
+  agent any            // or:  agent { label 'ubuntu' }
+
+  environment {
+    TERRAFORM_VERSION = "1.12.2"
+  }
 
   stages {
-    stage('Install Dependencies') {
+
+    /* -------------------------  Install tools  ------------------------- */
+    stage('Install Base Tools') {
       steps {
         sh '''
-        echo Installing base tools...
+        set -e   # Exit immediately on errors
+
+        echo "==> Updating apt package index..."
         sudo apt-get update -y
-        sudo apt-get install -y git curl wget unzip build-essential libssl-dev zlib1g-dev libbz2-dev \
-          libreadline-dev libsqlite3-dev libffi-dev
 
-        echo Installing AWS CLI v2...
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-        unzip awscliv2.zip
-        sudo ./aws/install
+        echo "==> Installing base packages (git, curl, wget, unzip)..."
+        // sudo apt-get install -y git curl wget unzip
 
-        echo Installing Terraform 1.12.2...
-        wget https://releases.hashicorp.com/terraform/1.12.2/terraform_1.12.2_linux_amd64.zip
-        unzip terraform_1.12.2_linux_amd64.zip
-        sudo mv terraform /usr/local/bin/
+        echo "==> Installing AWS CLI v2..."
+        // curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        // unzip -o awscliv2.zip
+        // sudo ./aws/install --update            # --update avoids “pre‑existing installation” errors
+        aws --version
 
-        echo Installing Python 3.13.5...
-        wget https://www.python.org/ftp/python/3.13.5/Python-3.13.5.tgz
-        tar xzf Python-3.13.5.tgz
-        cd Python-3.13.5
-        ./configure --enable-optimizations
-        make -j$(nproc)
-        sudo make altinstall
-        python3.13 --version
+        echo "==> Installing Terraform ${TERRAFORM_VERSION}..."
+        // wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+        // unzip -o terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+        // sudo mv terraform /usr/local/bin/
+        terraform -version
         '''
       }
+    }
+
+    /* -------------------------  Terraform init  ------------------------ */
+    stage('Terraform Init') {
+      steps {
+        dir('iac-terraform') {
+          sh '''
+          echo "==> Terraform init..."
+          terraform version
+          terraform init -input=false
+          '''
+        }
+      }
+    }
+
+    /* -------------------------  Terraform plan  ------------------------ */
+    stage('Terraform Plan') {
+      steps {
+        dir('iac-terraform') {
+          sh '''
+          echo "==> Terraform plan..."
+          terraform plan -out=tfplan
+          '''
+        }
+      }
+    }
+
+    /* -------------------------  Terraform apply  ----------------------- */
+    stage('Terraform Apply') {
+      steps {
+        dir('iac-terraform') {
+          sh '''
+          echo "==> Terraform apply..."
+          terraform apply -auto-approve tfplan
+          '''
+        }
+      }
+    }
+  }
+
+  /* ---------------------  Archive pipeline artifacts  ------------------ */
+  post {
+    success {
+      /* Store everything produced by the build. Adjust the pattern
+         if your workspace is large and you only need .tfstate, logs, etc. */
+      archiveArtifacts artifacts: '**/*', fingerprint: true
     }
   }
 }
