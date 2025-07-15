@@ -33,11 +33,12 @@ phases:
     commands:
       - echo Running Terraform plan...
       - terraform plan -out=tfplan
+      # - terraform plan -var-file="terraform.tfvars" -out=tfplan
 
   post_build:
     commands:
-      - echo Applying Terraform changes...
-      - terraform apply -auto-approve tfplan
+      #- echo Applying Terraform changes...
+      #- terraform apply -auto-approve tfplan
 
 artifacts:
   files:

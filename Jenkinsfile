@@ -1,58 +1,35 @@
 pipeline {
-  /* ------------------------------------------------------------
-     Runs on any Ubuntu agent that has sudo privileges available
-     ---------------------------------------------------------- */
-  agent any            // or:  agent { label 'ubuntu' }
+  agent any
 
   environment {
-    TERRAFORM_VERSION = "1.12.2"
+    TF_VAR_region       = 'ap-south-2'
+    TF_VAR_env          = 'dev'
+    TERRAFORM_VERSION   = '1.12.2'
   }
 
   stages {
-    /* -------------------------  Terraform init  ------------------------ */
-    stage('Terraform Init') {
+    stage('Prepare Environment') {
       steps {
-        dir('iac-terraform') {
+        withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
           sh '''
-          echo "==> Terraform init..."
-          terraform version
-          terraform init -input=false
+            echo "==> Installing Terraform..."
+            // wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+            // unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+            // sudo mv terraform /usr/local/bin/
+            terraform -version
+
+            echo "==> Initializing Terraform..."
+            cd iac-terraform
+            terraform init
+
+            echo "==> Planning Infrastructure..."
+            terraform plan -var="region=${TF_VAR_region}" -var="env=${TF_VAR_env}" -out=tfplan
+
+            // echo "==> Applying Infrastructure..."
+            // terraform apply -auto-approve tfplan
           '''
         }
       }
-    }
-
-    /* -------------------------  Terraform plan  ------------------------ */
-    stage('Terraform Plan') {
-      steps {
-        dir('iac-terraform') {
-          sh '''
-          echo "==> Terraform plan..."
-          terraform plan -out=tfplan
-          '''
-        }
-      }
-    }
-
-    /* -------------------------  Terraform apply  ----------------------- */
-    stage('Terraform Apply') {
-      steps {
-        dir('iac-terraform') {
-          sh '''
-          echo "==> Terraform apply..."
-          terraform apply -auto-approve tfplan
-          '''
-        }
-      }
-    }
-  }
-
-  /* ---------------------  Archive pipeline artifacts  ------------------ */
-  post {
-    success {
-      /* Store everything produced by the build. Adjust the pattern
-         if your workspace is large and you only need .tfstate, logs, etc. */
-      archiveArtifacts artifacts: '**/*', fingerprint: true
     }
   }
 }
