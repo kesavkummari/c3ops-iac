@@ -13,9 +13,6 @@ pipeline {
         withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
           sh '''
             echo "==> Installing Terraform..."
-            // wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-            // unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-            // sudo mv terraform /usr/local/bin/
             terraform -version
 
             echo "==> Initializing Terraform..."
@@ -24,9 +21,6 @@ pipeline {
 
             echo "==> Planning Infrastructure..."
             terraform plan -var="region=${TF_VAR_region}" -var="env=${TF_VAR_env}" -out=tfplan
-
-            // echo "==> Applying Infrastructure..."
-            // terraform apply -auto-approve tfplan
           '''
         }
       }
