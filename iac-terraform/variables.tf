@@ -46,6 +46,13 @@ variable "Environment" {
   default     = "Dev"
 }
 
+variable "env" {
+  description = "Deployment environment (dev, test, prod, etc.)"
+  type = string
+  default     = "dev"
+}
+
+
 variable "region" {
   description = "The AWS region to deploy the resources in"
   type        = string
