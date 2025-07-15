@@ -1,0 +1,45 @@
+version: 0.2
+
+phases:
+  install:
+    # runtime-versions:
+    #   python: 3.8  # Temporary, Python 3.13.5 will be installed manually
+    commands:
+      - echo Installing base tools...
+      - yum install -y git curl wget unzip --skip-broken
+
+      - echo Installing AWS CLI v2...
+      - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+      - unzip awscliv2.zip
+      
+      # Added --update flag to avoid preexisting installation error
+      - sudo ./aws/install --update
+      - aws --version
+
+      - echo Installing Terraform 1.12.2...
+      - wget https://releases.hashicorp.com/terraform/1.12.2/terraform_1.12.2_linux_amd64.zip
+      - unzip terraform_1.12.2_linux_amd64.zip
+      - sudo mv terraform /usr/local/bin/
+      - terraform -version
+
+  pre_build:
+    commands:
+      - echo Initializing Terraform...
+      - cd iac-terraform
+      - terraform version
+      - terraform init
+
+  build:
+    commands:
+      - echo Running Terraform plan...
+      - terraform plan -var="env=dev" -out=tfplan
+      # - terraform plan -var-file="terraform.tfvars" -out=tfplan
+
+  post_build:
+    commands:
+      #- echo Applying Terraform changes...
+      #- terraform apply -auto-approve tfplan
+
+artifacts:
+  files:
+    - '**/*'
