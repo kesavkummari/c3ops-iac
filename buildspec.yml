@@ -37,8 +37,8 @@ phases:
 
   post_build:
     commands:
-      #- echo Applying Terraform changes...
-      #- terraform apply -auto-approve tfplan
+      - echo Applying Terraform changes...
+      - terraform apply -auto-approve tfplan
 
 artifacts:
   files:
