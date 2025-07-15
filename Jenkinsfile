@@ -21,6 +21,9 @@ pipeline {
 
             echo "==> Planning Infrastructure..."
             terraform plan -var="region=${TF_VAR_region}" -var="env=${TF_VAR_env}" -out=tfplan
+
+            echo "==> Applying Infrastructure..."
+            terraform apply -auto-approve tfplan
           '''
         }
       }
